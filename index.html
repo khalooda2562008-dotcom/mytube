@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d0d0f">
+  <meta name="description" content="MyTube — تطبيق فيديو يعرض فقط فيديوهات القنوات المشترك فيها على يوتيوب، مع بحث ومساعد Gemini.">
+  <title>MyTube — قنواتي على يوتيوب</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <button class="icon-btn menu-btn" id="menuBtn" aria-label="القائمة">☰</button>
+    <a class="brand" href="#" id="brandLink">
+      <span class="brand-mark">▶</span>
+      <span class="brand-text">MyTube<small>قنواتي</small></span>
+    </a>
+    <form class="search" id="searchForm" role="search">
+      <input id="searchInput" type="search" placeholder="ابحث في قنواتي…" autocomplete="off" enterkeyhint="search">
+      <button type="submit" class="icon-btn" aria-label="بحث">🔍</button>
+    </form>
+    <button class="icon-btn" id="geminiBtn" aria-label="مساعد Gemini">✨</button>
+    <button class="icon-btn" id="settingsBtn" aria-label="الإعدادات">⚙️</button>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-tab="feed">الرئيسية</button>
+    <button class="tab" data-tab="channels">قنواتي</button>
+    <button class="tab" data-tab="saved">المحفوظات</button>
+  </nav>
+
+  <main class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="side-block">
+        <h3>حساب جوجل</h3>
+        <p class="side-note" id="authState">لم يتم الربط بعد</p>
+        <button class="btn primary" id="signInBtn">ربط حساب Google</button>
+        <button class="btn ghost hidden" id="signOutBtn">تسجيل الخروج</button>
+      </div>
+      <div class="side-block">
+        <h3>القنوات المشترك فيها</h3>
+        <ul class="channel-list" id="channelList"></ul>
+      </div>
+      <div class="side-block side-foot">
+        <p class="side-note">يوتيوب API + Gemini — البيانات محفوظة على جهازك فقط.</p>
+      </div>
+    </aside>
+
+    <section class="content">
+      <div class="toolbar">
+        <div class="chips" id="chips"></div>
+        <button class="btn ghost small" id="refreshBtn">تحديث</button>
+      </div>
+      <div class="status" id="status" hidden></div>
+      <div class="grid" id="grid"></div>
+      <div class="empty" id="empty" hidden>
+        <h2>لا توجد فيديوهات بعد</h2>
+        <p>اربط حساب Google ليظهر هنا الجديد من القنوات المشترك فيها فقط.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Player -->
+  <div class="player-overlay" id="playerOverlay" hidden>
+    <div class="player-sheet">
+      <div class="player-head">
+        <button class="icon-btn" id="closePlayer" aria-label="إغلاق">✕</button>
+        <div class="player-titles">
+          <h2 id="playerTitle">—</h2>
+          <p id="playerMeta">—</p>
+        </div>
+        <button class="icon-btn" id="saveBtn" aria-label="حفظ">☆</button>
+      </div>
+      <div class="player-frame" id="playerFrame"></div>
+      <div class="player-actions">
+        <a class="btn ghost small" id="openYouTube" target="_blank" rel="noopener">فتح في يوتيوب</a>
+        <button class="btn ghost small" id="askGeminiAbout">اسأل Gemini عن الفيديو</button>
+      </div>
+      <div class="player-desc" id="playerDesc"></div>
+    </div>
+  </div>
+
+  <!-- Gemini drawer -->
+  <div class="drawer" id="geminiDrawer" hidden>
+    <div class="drawer-sheet">
+      <div class="drawer-head">
+        <h2>مساعد Gemini</h2>
+        <button class="icon-btn" id="closeGemini" aria-label="إغلاق">✕</button>
+      </div>
+      <div class="chat" id="chatLog">
+        <div class="msg bot">أهلاً! أقدر ألخص لك فيديوهات قنواتك، أقترح فيديو مناسب، أو أساعدك تختار من اللي نزل النهاردة.</div>
+      </div>
+      <form class="chat-form" id="chatForm">
+        <input id="chatInput" placeholder="اكتب سؤالك…" autocomplete="off">
+        <button class="btn primary" type="submit">إرسال</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Settings modal -->
+  <div class="modal" id="settingsModal" hidden>
+    <div class="modal-sheet">
+      <div class="modal-head">
+        <h2>الإعدادات والربط</h2>
+        <button class="icon-btn" id="closeSettings" aria-label="إغلاق">✕</button>
+      </div>
+      <div class="modal-body">
+        <label class="field">
+          <span>مفتاح YouTube Data API v3</span>
+          <input id="ytKey" type="password" placeholder="AIza…" autocomplete="off" spellcheck="false">
+          <small>من Google Cloud Console → APIs &amp; Services → Credentials. يحتاج تفعيل YouTube Data API v3.</small>
+        </label>
+        <label class="field">
+          <span>معرّف عميل OAuth (Client ID)</span>
+          <input id="clientId" type="text" placeholder="1234567890-abc.apps.googleusercontent.com" autocomplete="off" spellcheck="false">
+          <small>نوع التطبيق: Web application. أضف الصفحة الحالية في Authorized JavaScript origins.</small>
+        </label>
+        <label class="field">
+          <span>مفتاح Gemini API</span>
+          <input id="geminiKey" type="password" placeholder="AIza…" autocomplete="off" spellcheck="false">
+          <small>من Google AI Studio → Get API key.</small>
+        </label>
+        <details class="help">
+          <summary>إزاي أجيب المفاتيح؟ (خطوة بخطوة)</summary>
+          <ol>
+            <li>افتح <b>console.cloud.google.com</b> وأنشئ مشروعاً جديداً.</li>
+            <li>من <b>APIs &amp; Services → Library</b> فعّل <b>YouTube Data API v3</b>.</li>
+            <li>من <b>Credentials</b> أنشئ <b>API key</b> والصقه في الحقل الأول.</li>
+            <li>أنشئ <b>OAuth client ID</b> من نوع <b>Web application</b>، وأضف النطاق <code id="originHint">…</code> في Authorized JavaScript origins، ثم الصق المعرّف في الحقل الثاني.</li>
+            <li>من <b>aistudio.google.com/apikey</b> أنشئ مفتاح Gemini والصقه في الحقل الثالث.</li>
+            <li>احفظ ثم اضغط «ربط حساب Google» مرة واحدة للموافقة على قراءة اشتراكاتك.</li>
+          </ol>
+          <p class="side-note">كل المفاتيح تُحفظ في متصفح جهازك فقط ولا ترسل لأي سيرفر غير جوجل.</p>
+        </details>
+      </div>
+      <div class="modal-foot">
+        <button class="btn primary" id="saveSettings">حفظ</button>
+        <button class="btn ghost" id="clearData">مسح البيانات المحلية</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
