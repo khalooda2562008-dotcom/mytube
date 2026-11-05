@@ -16,6 +16,8 @@
 
 * { box-sizing: border-box; }
 
+[hidden] { display: none !important; }
+
 html, body {
   margin: 0;
   padding: 0;
@@ -517,9 +519,8 @@ input { font-family: inherit; }
   }
   html[dir="rtl"] .sidebar { transform: translateX(-110%); }
   .sidebar.open { transform: none; }
-  .topbar { grid-template-columns: auto auto 1fr auto; }
-  #geminiBtn { display: none; }
+  .topbar { grid-template-columns: auto auto 1fr auto auto; gap: 8px; padding: 8px 10px; }
+  .brand-text { display: none; }
   .grid { grid-template-columns: 1fr; }
-  .brand-text small { display: none; }
   .search input { font-size: 14px; }
 }

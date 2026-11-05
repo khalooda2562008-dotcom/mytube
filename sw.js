@@ -1,5 +1,5 @@
 /* MyTube service worker: يخزن هيكل التطبيق للعمل دون اتصال */
-const CACHE = 'mytube-v1';
+const CACHE = 'mytube-v2';
 const SHELL = [
   './',
   './index.html',
