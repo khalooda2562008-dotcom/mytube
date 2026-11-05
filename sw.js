@@ -1,10 +1,10 @@
 /* MyTube service worker: يخزن هيكل التطبيق للعمل دون اتصال */
-const CACHE = 'mytube-v2';
+const CACHE = 'mytube-v3';
 const SHELL = [
   './',
   './index.html',
-  './styles.css',
-  './app.js',
+  './styles.css?v=3',
+  './app.js?v=3',
   './manifest.webmanifest',
   './assets/icon.svg',
   './assets/icon-192.png',
